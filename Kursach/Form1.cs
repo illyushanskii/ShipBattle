@@ -12,40 +12,40 @@ namespace Kursach
     public partial class Form1 : Form
     {
         const int CELL_SIZE = 50;
-        bool dragging = false; //Чи триває перетягування
+        bool dragging = false; //Р§Рё С‚СЂРёРІР°С” РїРµСЂРµС‚СЏРіСѓРІР°РЅРЅСЏ
 
-        //Словники для клітинок, кораблів, початкових позицій та даних клітинок
+        //РЎР»РѕРІРЅРёРєРё РґР»СЏ РєР»С–С‚РёРЅРѕРє, РєРѕСЂР°Р±Р»С–РІ, РїРѕС‡Р°С‚РєРѕРІРёС… РїРѕР·РёС†С–Р№ С‚Р° РґР°РЅРёС… РєР»С–С‚РёРЅРѕРє
         Dictionary<string, PictureBox> pictureBoxes = new Dictionary<string, PictureBox>();
         Dictionary<string, PictureBox> ships = new Dictionary<string, PictureBox>();
         Dictionary<string, Point> defaultShipPoints = new Dictionary<string, Point>();
         Dictionary<string, Cell> cells = new Dictionary<string, Cell>();
 
-        public bool programClose = false; //Прапорець для закриття програми
+        public bool programClose = false; //РџСЂР°РїРѕСЂРµС†СЊ РґР»СЏ Р·Р°РєСЂРёС‚С‚СЏ РїСЂРѕРіСЂР°РјРё
 
-        //Координати для перетягування і межі поля
+        //РљРѕРѕСЂРґРёРЅР°С‚Рё РґР»СЏ РїРµСЂРµС‚СЏРіСѓРІР°РЅРЅСЏ С– РјРµР¶С– РїРѕР»СЏ
         Point dragCursorPoint;
         Point dragPictureBoxPoint;
         Point startField;
         Point endField;
         Point lastShipPoint = new Point(-1, -1);
 
-        static string path = "D:/ДНУ ФФЕКС/Семестр 4/СП/Kursach/images"; //Шлях до зображень
+        static string path = "D:/Р”РќРЈ Р¤Р¤Р•РљРЎ/РЎРµРјРµСЃС‚СЂ 4/РЎРџ/Kursach/images"; //РЁР»СЏС… РґРѕ Р·РѕР±СЂР°Р¶РµРЅСЊ
         private readonly Bitmap emptyBitmap = new Bitmap(path + "/empty.png");
         private readonly Bitmap nearBitmap = new Bitmap(path + "/near.png");
 
-        PictureBox movingShip; //Корабель, що перетягується
-        string movingShipNum; //Збереження статусу корабля
-        bool isRotate = false; //Чи повернутий корабель
+        PictureBox movingShip; //РљРѕСЂР°Р±РµР»СЊ, С‰Рѕ РїРµСЂРµС‚СЏРіСѓС”С‚СЊСЃСЏ
+        string movingShipNum; //Р—Р±РµСЂРµР¶РµРЅРЅСЏ СЃС‚Р°С‚СѓСЃСѓ РєРѕСЂР°Р±Р»СЏ
+        bool isRotate = false; //Р§Рё РїРѕРІРµСЂРЅСѓС‚РёР№ РєРѕСЂР°Р±РµР»СЊ
 
         public Form1()
         {
             InitializeComponent();
 
-            //Визначення меж поля
+            //Р’РёР·РЅР°С‡РµРЅРЅСЏ РјРµР¶ РїРѕР»СЏ
             startField = pictureBox0_0.Location;
             endField = new Point(pictureBox9_9.Location.X + CELL_SIZE, pictureBox9_9.Location.Y + CELL_SIZE);
 
-            //Ініціалізація клітинок поля
+            //Р†РЅС–С†С–Р°Р»С–Р·Р°С†С–СЏ РєР»С–С‚РёРЅРѕРє РїРѕР»СЏ
             for (int i = 0; i < 10; i++)
             {
                 for (int j = 0; j < 10; j++)
@@ -54,14 +54,14 @@ namespace Kursach
                     cells.Add($"{i}_{j}", new Cell(found.Location));
                     pictureBoxes[$"{i}_{j}"] = found;
 
-                    //Прив'язка обробників подій для клітинок
+                    //РџСЂРёРІ'СЏР·РєР° РѕР±СЂРѕР±РЅРёРєС–РІ РїРѕРґС–Р№ РґР»СЏ РєР»С–С‚РёРЅРѕРє
                     found.MouseDown += field_MouseDown;
                     found.MouseMove += field_MouseMove;
                     found.MouseUp += field_MouseUp;
                 }
             }
 
-            //Ініціалізація кораблів і їх обробників
+            //Р†РЅС–С†С–Р°Р»С–Р·Р°С†С–СЏ РєРѕСЂР°Р±Р»С–РІ С– С—С… РѕР±СЂРѕР±РЅРёРєС–РІ
             int k = 4;
             for (int i = 1; i <= 4; i++)
             {
@@ -80,12 +80,12 @@ namespace Kursach
         }
 
 
-        //Метод перемішення кораблів по формі
+        //РњРµС‚РѕРґ РїРµСЂРµРјС–С€РµРЅРЅСЏ РєРѕСЂР°Р±Р»С–РІ РїРѕ С„РѕСЂРјС–
         private void shipMove()
         {
             if (dragging && movingShip != null)
             {
-                //Вичеслення шагу переміщення 5 пк.
+                //Р’РёС‡РµСЃР»РµРЅРЅСЏ С€Р°РіСѓ РїРµСЂРµРјС–С‰РµРЅРЅСЏ 5 РїРє.
                 Point shipCenter = new Point(movingShip.Location.X + 25, movingShip.Location.Y + 25);
                 int dx = Cursor.Position.X - dragCursorPoint.X;
                 int dy = Cursor.Position.Y - dragCursorPoint.Y;
@@ -99,13 +99,13 @@ namespace Kursach
                     return;
 
                 movingShip.Location = newLocation;
-                //Перевірка - корабель знаходиться в ігровому полі
+                //РџРµСЂРµРІС–СЂРєР° - РєРѕСЂР°Р±РµР»СЊ Р·РЅР°С…РѕРґРёС‚СЊСЃСЏ РІ С–РіСЂРѕРІРѕРјСѓ РїРѕР»С–
                 if (movingShip.Left >= startField.X && movingShip.Right <= endField.X && movingShip.Top >= startField.Y && movingShip.Bottom <= endField.Y)
                 {
                     movingShip.Visible = false;
                     int size = Convert.ToInt32(movingShipNum.Substring(0, 1));
                     foreach (KeyValuePair<string, Cell> data in cells)
-                    {   //Шукаємо на яку клітку попав корабель
+                    {   //РЁСѓРєР°С”РјРѕ РЅР° СЏРєСѓ РєР»С–С‚РєСѓ РїРѕРїР°РІ РєРѕСЂР°Р±РµР»СЊ
                         int X = Math.Abs(data.Value.middle.X - shipCenter.X);
                         int Y = Math.Abs(data.Value.middle.Y - shipCenter.Y);
                         if (X <= 25 && Y <= 25)
@@ -113,7 +113,7 @@ namespace Kursach
 
                             if (lastShipPoint.X > -1 && lastShipPoint.Y > -1)
                             {
-                                //Очистка старого розміщення корабля
+                                //РћС‡РёСЃС‚РєР° СЃС‚Р°СЂРѕРіРѕ СЂРѕР·РјС–С‰РµРЅРЅСЏ РєРѕСЂР°Р±Р»СЏ
                                 ClearLastShipZone(lastShipPoint, size, isRotate);
                             }
 
@@ -121,57 +121,57 @@ namespace Kursach
                             int row = int.Parse(parts[0]);
                             int col = int.Parse(parts[1]);
                             lastShipPoint = new Point(col, row);
-                            //Перевірка щоб кораль не потрапив в зайняті зони іншими кораблями
+                            //РџРµСЂРµРІС–СЂРєР° С‰РѕР± РєРѕСЂР°Р»СЊ РЅРµ РїРѕС‚СЂР°РїРёРІ РІ Р·Р°Р№РЅСЏС‚С– Р·РѕРЅРё С–РЅС€РёРјРё РєРѕСЂР°Р±Р»СЏРјРё
                             if (!CanPlaceShip(row, col, size, isRotate))
                             {
                                 movingShip.Visible = true;
                                 return;
                             }
 
-                            //Малюємо корабель
+                            //РњР°Р»СЋС”РјРѕ РєРѕСЂР°Р±РµР»СЊ
                             shipDrawing(isRotate, row, col, size);
 
-                            //Вираховуємо периметр зони біля корабля
+                            //Р’РёСЂР°С…РѕРІСѓС”РјРѕ РїРµСЂРёРјРµС‚СЂ Р·РѕРЅРё Р±С–Р»СЏ РєРѕСЂР°Р±Р»СЏ
                             int startRow = isRotate ? Math.Max(0, row - 1) : Math.Max(0, row - 1);
                             int endRow = isRotate ? Math.Min(9, row + size) : Math.Min(9, row + 1);
 
                             int startCol = isRotate ? Math.Max(0, col - 1) : Math.Max(0, col - 1);
                             int endCol = isRotate ? Math.Min(9, col + 1) : Math.Min(9, col + size);
 
-                            //Малюємо цю зону
+                            //РњР°Р»СЋС”РјРѕ С†СЋ Р·РѕРЅСѓ
                             nearDrawing(startRow, endRow, startCol, endCol);
                         }
                     }
                 }
                 else
                 {
-                    //Якщо корабль за межами ігрового поля витираємо корабель
+                    //РЇРєС‰Рѕ РєРѕСЂР°Р±Р»СЊ Р·Р° РјРµР¶Р°РјРё С–РіСЂРѕРІРѕРіРѕ РїРѕР»СЏ РІРёС‚РёСЂР°С”РјРѕ РєРѕСЂР°Р±РµР»СЊ
                     movingShip.Visible = true;
                     ClearLastShipZone(lastShipPoint, Convert.ToInt32(movingShipNum.Substring(0, 1)), isRotate);
                 }
             }
         }
-        //Малює корабель на полі
+        //РњР°Р»СЋС” РєРѕСЂР°Р±РµР»СЊ РЅР° РїРѕР»С–
         private void shipDrawing(bool rotate, int row, int col, int size)
         {
             for (int i = 0; i < size; i++)
             {
-                //Визначаємо координати для кожної частини корабля
+                //Р’РёР·РЅР°С‡Р°С”РјРѕ РєРѕРѕСЂРґРёРЅР°С‚Рё РґР»СЏ РєРѕР¶РЅРѕС— С‡Р°СЃС‚РёРЅРё РєРѕСЂР°Р±Р»СЏ
                 int r = rotate ? row + i : row;
                 int c = rotate ? col : col + i;
                 string key = $"{r}_{c}";
 
                 if (cells.ContainsKey(key))
                 {
-                    //Визначаємо номер частини корабля (для зображення)
+                    //Р’РёР·РЅР°С‡Р°С”РјРѕ РЅРѕРјРµСЂ С‡Р°СЃС‚РёРЅРё РєРѕСЂР°Р±Р»СЏ (РґР»СЏ Р·РѕР±СЂР°Р¶РµРЅРЅСЏ)
                     int part = rotate ? size - i : i + 1;
-                    cells[key].status = movingShipNum; //Присвоюємо статус корабля
-                    cells[key].shipPart = $"{size}_{part}"; //Зберігаємо розмір і частину
-                    cells[key].rotate = rotate; //Пам’ятаємо орієнтацію
+                    cells[key].status = movingShipNum; //РџСЂРёСЃРІРѕСЋС”РјРѕ СЃС‚Р°С‚СѓСЃ РєРѕСЂР°Р±Р»СЏ
+                    cells[key].shipPart = $"{size}_{part}"; //Р—Р±РµСЂС–РіР°С”РјРѕ СЂРѕР·РјС–СЂ С– С‡Р°СЃС‚РёРЅСѓ
+                    cells[key].rotate = rotate; //РџР°РјвЂ™СЏС‚Р°С”РјРѕ РѕСЂС–С”РЅС‚Р°С†С–СЋ
 
                     if (pictureBoxes.TryGetValue(key, out PictureBox found))
                     {
-                        //Встановлюємо відповідне зображення
+                        //Р’СЃС‚Р°РЅРѕРІР»СЋС”РјРѕ РІС–РґРїРѕРІС–РґРЅРµ Р·РѕР±СЂР°Р¶РµРЅРЅСЏ
                         this.Invoke((MethodInvoker)(() =>
                         {
                             found.Image = new Bitmap(path + $"/{cells[key].shipPart}.png");
@@ -183,7 +183,7 @@ namespace Kursach
             }
         }
 
-        //Помічає клітинки навколо корабля як "біля корабля"
+        //РџРѕРјС–С‡Р°С” РєР»С–С‚РёРЅРєРё РЅР°РІРєРѕР»Рѕ РєРѕСЂР°Р±Р»СЏ СЏРє "Р±С–Р»СЏ РєРѕСЂР°Р±Р»СЏ"
         private void nearDrawing(int startRow, int endRow, int startCol, int endCol)
         {
             for (int r = startRow; r <= endRow; r++)
@@ -192,12 +192,12 @@ namespace Kursach
                 {
                     string key = $"{r}_{c}";
 
-                    //Якщо клітинка порожня — ставимо позначку "біля корабля"
+                    //РЇРєС‰Рѕ РєР»С–С‚РёРЅРєР° РїРѕСЂРѕР¶РЅСЏ вЂ” СЃС‚Р°РІРёРјРѕ РїРѕР·РЅР°С‡РєСѓ "Р±С–Р»СЏ РєРѕСЂР°Р±Р»СЏ"
                     if (cells.ContainsKey(key) && cells[key].status == "empty")
                     {
                         cells[key].status = $"n_{movingShipNum}";
                     }
-                    //Якщо вже є позначка іншого корабля — просто позначаємо "near"
+                    //РЇРєС‰Рѕ РІР¶Рµ С” РїРѕР·РЅР°С‡РєР° С–РЅС€РѕРіРѕ РєРѕСЂР°Р±Р»СЏ вЂ” РїСЂРѕСЃС‚Рѕ РїРѕР·РЅР°С‡Р°С”РјРѕ "near"
                     else if (cells.ContainsKey(key) && cells[key].status.StartsWith("n_"))
                     {
                         cells[key].status = "near";
@@ -206,25 +206,25 @@ namespace Kursach
             }
         }
 
-        //Перевіряє, чи можна поставити корабель у вказаній позиції
+        //РџРµСЂРµРІС–СЂСЏС”, С‡Рё РјРѕР¶РЅР° РїРѕСЃС‚Р°РІРёС‚Рё РєРѕСЂР°Р±РµР»СЊ Сѓ РІРєР°Р·Р°РЅС–Р№ РїРѕР·РёС†С–С—
         private bool CanPlaceShip(int row, int col, int size, bool rotated)
         {
             for (int i = 0; i < size; i++)
             {
-                //Визначаємо ключ клітинки
+                //Р’РёР·РЅР°С‡Р°С”РјРѕ РєР»СЋС‡ РєР»С–С‚РёРЅРєРё
                 string key = rotated ? $"{row + i}_{col}" : $"{row}_{col + i}";
 
-                //Якщо клітинки не існує — не можна ставити
+                //РЇРєС‰Рѕ РєР»С–С‚РёРЅРєРё РЅРµ С–СЃРЅСѓС” вЂ” РЅРµ РјРѕР¶РЅР° СЃС‚Р°РІРёС‚Рё
                 if (!cells.ContainsKey(key))
                     return false;
 
                 string status = cells[key].status;
 
-                //Якщо клітинка зайнята іншим кораблем
+                //РЇРєС‰Рѕ РєР»С–С‚РёРЅРєР° Р·Р°Р№РЅСЏС‚Р° С–РЅС€РёРј РєРѕСЂР°Р±Р»РµРј
                 if (status != "empty" && status != movingShipNum)
                     return false;
 
-                //Якщо клітинка біля іншого корабля
+                //РЇРєС‰Рѕ РєР»С–С‚РёРЅРєР° Р±С–Р»СЏ С–РЅС€РѕРіРѕ РєРѕСЂР°Р±Р»СЏ
                 if (status.StartsWith("n_") && status != $"n_{movingShipNum}")
                     return false;
             }
@@ -232,7 +232,7 @@ namespace Kursach
             return true;
         }
 
-        //Видаляє корабель і сусідні клітинки
+        //Р’РёРґР°Р»СЏС” РєРѕСЂР°Р±РµР»СЊ С– СЃСѓСЃС–РґРЅС– РєР»С–С‚РёРЅРєРё
         private void ClearLastShipZone(Point shipPoint, int size, bool rotate)
         {
             int row = shipPoint.Y;
@@ -244,7 +244,7 @@ namespace Kursach
             int endCol = rotate ? Math.Min(9, col + 1) : Math.Min(9, col + size);
             ConcurrentBag<string> updatedKeys = new();
 
-            //Використовуємо Parallel.For для прискорення очищення великої області
+            //Р’РёРєРѕСЂРёСЃС‚РѕРІСѓС”РјРѕ Parallel.For РґР»СЏ РїСЂРёСЃРєРѕСЂРµРЅРЅСЏ РѕС‡РёС‰РµРЅРЅСЏ РІРµР»РёРєРѕС— РѕР±Р»Р°СЃС‚С–
             Parallel.For(startRow, endRow + 1, r =>
             {
                 for (int c = startCol; c <= endCol; c++)
@@ -266,7 +266,7 @@ namespace Kursach
             {
                 if (pictureBoxes.TryGetValue(key, out PictureBox found))
                 {
-                    //Invoke використовується для доступу до графічних елементів
+                    //Invoke РІРёРєРѕСЂРёСЃС‚РѕРІСѓС”С‚СЊСЃСЏ РґР»СЏ РґРѕСЃС‚СѓРїСѓ РґРѕ РіСЂР°С„С–С‡РЅРёС… РµР»РµРјРµРЅС‚С–РІ
                     found.Invoke(() => found.Image = emptyBitmap);
                 }
             }
@@ -274,54 +274,54 @@ namespace Kursach
             DeleteTotalNear();
         }
 
-        //Очищення зайвих near-клітинок
+        //РћС‡РёС‰РµРЅРЅСЏ Р·Р°Р№РІРёС… near-РєР»С–С‚РёРЅРѕРє
         private void DeleteTotalNear()
         {
-            // Список клітинок, які потрібно очистити
+            // РЎРїРёСЃРѕРє РєР»С–С‚РёРЅРѕРє, СЏРєС– РїРѕС‚СЂС–Р±РЅРѕ РѕС‡РёСЃС‚РёС‚Рё
             List<string> toClear = new List<string>();
 
-            // Список клітинок, яким треба присвоїти статус "n_..."
+            // РЎРїРёСЃРѕРє РєР»С–С‚РёРЅРѕРє, СЏРєРёРј С‚СЂРµР±Р° РїСЂРёСЃРІРѕС—С‚Рё СЃС‚Р°С‚СѓСЃ "n_..."
             List<string> toUpdateToNear = new List<string>();
 
-            // Словник для оновлення статусів біля кораблів
+            // РЎР»РѕРІРЅРёРє РґР»СЏ РѕРЅРѕРІР»РµРЅРЅСЏ СЃС‚Р°С‚СѓСЃС–РІ Р±С–Р»СЏ РєРѕСЂР°Р±Р»С–РІ
             Dictionary<string, string> nearStatuses = new Dictionary<string, string>();
 
-            // Обходимо всі клітинки на полі
+            // РћР±С…РѕРґРёРјРѕ РІСЃС– РєР»С–С‚РёРЅРєРё РЅР° РїРѕР»С–
             foreach (var kv in cells)
             {
                 string key = kv.Key;
                 var cell = kv.Value;
 
-                // Працюємо тільки з клітинками, які мають статус "near"
+                // РџСЂР°С†СЋС”РјРѕ С‚С–Р»СЊРєРё Р· РєР»С–С‚РёРЅРєР°РјРё, СЏРєС– РјР°СЋС‚СЊ СЃС‚Р°С‚СѓСЃ "near"
                 if (cell.status != "near") continue;
 
-                // Визначаємо координати клітинки
+                // Р’РёР·РЅР°С‡Р°С”РјРѕ РєРѕРѕСЂРґРёРЅР°С‚Рё РєР»С–С‚РёРЅРєРё
                 int sep = key.IndexOf('_');
                 int row = int.Parse(key[..sep]);
                 int col = int.Parse(key[(sep + 1)..]);
 
-                // Збираємо всі унікальні статуси кораблів, які оточують цю клітинку
+                // Р—Р±РёСЂР°С”РјРѕ РІСЃС– СѓРЅС–РєР°Р»СЊРЅС– СЃС‚Р°С‚СѓСЃРё РєРѕСЂР°Р±Р»С–РІ, СЏРєС– РѕС‚РѕС‡СѓСЋС‚СЊ С†СЋ РєР»С–С‚РёРЅРєСѓ
                 HashSet<string> nearbyShips = new HashSet<string>();
 
-                // Перевіряємо клітинки навколо поточної
+                // РџРµСЂРµРІС–СЂСЏС”РјРѕ РєР»С–С‚РёРЅРєРё РЅР°РІРєРѕР»Рѕ РїРѕС‚РѕС‡РЅРѕС—
                 for (int r = row - 1; r <= row + 1; r++)
                 {
                     for (int c = col - 1; c <= col + 1; c++)
                     {
-                        // Пропускаємо саму клітинку
+                        // РџСЂРѕРїСѓСЃРєР°С”РјРѕ СЃР°РјСѓ РєР»С–С‚РёРЅРєСѓ
                         if (r == row && c == col) continue;
 
-                        // Пропускаємо вихід за межі поля
+                        // РџСЂРѕРїСѓСЃРєР°С”РјРѕ РІРёС…С–Рґ Р·Р° РјРµР¶С– РїРѕР»СЏ
                         if (r < 0 || r > 9 || c < 0 || c > 9) continue;
 
                         string neighborKey = $"{r}_{c}";
 
-                        // Перевіряємо, чи існує сусідня клітинка
+                        // РџРµСЂРµРІС–СЂСЏС”РјРѕ, С‡Рё С–СЃРЅСѓС” СЃСѓСЃС–РґРЅСЏ РєР»С–С‚РёРЅРєР°
                         if (!cells.TryGetValue(neighborKey, out var neighbor)) continue;
 
                         string status = neighbor.status;
 
-                        // Якщо клітинка — частина корабля (але не "empty", "near", "n_...")
+                        // РЇРєС‰Рѕ РєР»С–С‚РёРЅРєР° вЂ” С‡Р°СЃС‚РёРЅР° РєРѕСЂР°Р±Р»СЏ (Р°Р»Рµ РЅРµ "empty", "near", "n_...")
                         if (!string.IsNullOrEmpty(status) &&
                             status != "empty" &&
                             status != "near" &&
@@ -332,7 +332,7 @@ namespace Kursach
                     }
                 }
 
-                // Якщо поряд лише один корабель, додаємо прив'язку до нього
+                // РЇРєС‰Рѕ РїРѕСЂСЏРґ Р»РёС€Рµ РѕРґРёРЅ РєРѕСЂР°Р±РµР»СЊ, РґРѕРґР°С”РјРѕ РїСЂРёРІ'СЏР·РєСѓ РґРѕ РЅСЊРѕРіРѕ
                 if (nearbyShips.Count == 1)
                 {
                     string shipStatus = nearbyShips.First();
@@ -340,7 +340,7 @@ namespace Kursach
                     nearStatuses[key] = $"n_{shipStatus}";
                     toUpdateToNear.Add(key);
                 }
-                // Якщо поряд нічого — очищаємо клітинку
+                // РЇРєС‰Рѕ РїРѕСЂСЏРґ РЅС–С‡РѕРіРѕ вЂ” РѕС‡РёС‰Р°С”РјРѕ РєР»С–С‚РёРЅРєСѓ
                 else if (nearbyShips.Count == 0)
                 {
                     cell.status = "empty";
@@ -349,17 +349,17 @@ namespace Kursach
                 }
             }
 
-            // Оновлюємо візуально клітинки, які стали "біля корабля"
+            // РћРЅРѕРІР»СЋС”РјРѕ РІС–Р·СѓР°Р»СЊРЅРѕ РєР»С–С‚РёРЅРєРё, СЏРєС– СЃС‚Р°Р»Рё "Р±С–Р»СЏ РєРѕСЂР°Р±Р»СЏ"
             foreach (var key in toUpdateToNear)
             {
                 if (pictureBoxes.TryGetValue(key, out PictureBox found))
                 {
-                    // Використовуємо Invoke для оновлення зображення з потоку UI
+                    // Р’РёРєРѕСЂРёСЃС‚РѕРІСѓС”РјРѕ Invoke РґР»СЏ РѕРЅРѕРІР»РµРЅРЅСЏ Р·РѕР±СЂР°Р¶РµРЅРЅСЏ Р· РїРѕС‚РѕРєСѓ UI
                     found.Invoke(() => found.Image = nearBitmap);
                 }
             }
 
-            // Очищаємо клітинки, які стали порожніми
+            // РћС‡РёС‰Р°С”РјРѕ РєР»С–С‚РёРЅРєРё, СЏРєС– СЃС‚Р°Р»Рё РїРѕСЂРѕР¶РЅС–РјРё
             foreach (var key in toClear)
             {
                 if (pictureBoxes.TryGetValue(key, out PictureBox found))
@@ -370,20 +370,20 @@ namespace Kursach
         }
 
 
-        //Метод для перевірки, чи є хоча б один корабель на полі
+        //РњРµС‚РѕРґ РґР»СЏ РїРµСЂРµРІС–СЂРєРё, С‡Рё С” С…РѕС‡Р° Р± РѕРґРёРЅ РєРѕСЂР°Р±РµР»СЊ РЅР° РїРѕР»С–
         private bool oneShipInField()
         {
             foreach (var data in ships)
             {
                 if (!data.Value.Visible)
                 {
-                    return true; //Якщо хоча б один корабель не видно, він на полі
+                    return true; //РЇРєС‰Рѕ С…РѕС‡Р° Р± РѕРґРёРЅ РєРѕСЂР°Р±РµР»СЊ РЅРµ РІРёРґРЅРѕ, РІС–РЅ РЅР° РїРѕР»С–
                 }
             }
-            return false; //Всі кораблі на місці
+            return false; //Р’СЃС– РєРѕСЂР°Р±Р»С– РЅР° РјС–СЃС†С–
         }
 
-        //Метод для відображення меж кораблів
+        //РњРµС‚РѕРґ РґР»СЏ РІС–РґРѕР±СЂР°Р¶РµРЅРЅСЏ РјРµР¶ РєРѕСЂР°Р±Р»С–РІ
         private void showBorders()
         {
             if (oneShipInField())
@@ -394,44 +394,44 @@ namespace Kursach
                     if (data.Value.status.StartsWith("n_") || data.Value.status == "near")
                     {
                         if (pictureBoxes.TryGetValue(data.Key, out PictureBox found))
-                            found.Image = nearBitmap; //Відображаємо зображення для сусідніх клітинок
+                            found.Image = nearBitmap; //Р’С–РґРѕР±СЂР°Р¶Р°С”РјРѕ Р·РѕР±СЂР°Р¶РµРЅРЅСЏ РґР»СЏ СЃСѓСЃС–РґРЅС–С… РєР»С–С‚РёРЅРѕРє
                     }
                     else if (Int32.TryParse(check, out int num))
                     {
                         if (data.Value.rotate)
                         {
                             if (pictureBoxes.TryGetValue(data.Key, out PictureBox found))
-                                found.Image = new Bitmap(path + $"/nr_{data.Value.shipPart}.png"); //Зображення для вертикального корабля
+                                found.Image = new Bitmap(path + $"/nr_{data.Value.shipPart}.png"); //Р—РѕР±СЂР°Р¶РµРЅРЅСЏ РґР»СЏ РІРµСЂС‚РёРєР°Р»СЊРЅРѕРіРѕ РєРѕСЂР°Р±Р»СЏ
                         }
                         else
                         {
                             if (pictureBoxes.TryGetValue(data.Key, out PictureBox found))
-                                found.Image = new Bitmap(path + $"/n_{data.Value.shipPart}.png"); //Зображення для горизонтального корабля
+                                found.Image = new Bitmap(path + $"/n_{data.Value.shipPart}.png"); //Р—РѕР±СЂР°Р¶РµРЅРЅСЏ РґР»СЏ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕРіРѕ РєРѕСЂР°Р±Р»СЏ
                         }
                     }
                 }
             }
         }
-        //Метод для приховування заборонених зон на всіх клітинках поля
+        //РњРµС‚РѕРґ РґР»СЏ РїСЂРёС…РѕРІСѓРІР°РЅРЅСЏ Р·Р°Р±РѕСЂРѕРЅРµРЅРёС… Р·РѕРЅ РЅР° РІСЃС–С… РєР»С–С‚РёРЅРєР°С… РїРѕР»СЏ
         private void hideBorders()
         {
-            //Прибираємо обрамлення навколо клітинок кораблів і зон "біля"
+            //РџСЂРёР±РёСЂР°С”РјРѕ РѕР±СЂР°РјР»РµРЅРЅСЏ РЅР°РІРєРѕР»Рѕ РєР»С–С‚РёРЅРѕРє РєРѕСЂР°Р±Р»С–РІ С– Р·РѕРЅ "Р±С–Р»СЏ"
             foreach (var data in cells)
             {
                 string check = data.Value.status.Substring(0, 1);
                 if (data.Value.status.StartsWith("n_") || data.Value.status == "near")
                 {
                     if (pictureBoxes.TryGetValue(data.Key, out PictureBox found))
-                        found.Image = emptyBitmap; //Ставимо порожнє зображення
+                        found.Image = emptyBitmap; //РЎС‚Р°РІРёРјРѕ РїРѕСЂРѕР¶РЅС” Р·РѕР±СЂР°Р¶РµРЅРЅСЏ
                 }
                 else if (Int32.TryParse(check, out int num))
                 {
                     if (pictureBoxes.TryGetValue(data.Key, out PictureBox found))
                     {
-                        //Відновлюємо зображення частини корабля
+                        //Р’С–РґРЅРѕРІР»СЋС”РјРѕ Р·РѕР±СЂР°Р¶РµРЅРЅСЏ С‡Р°СЃС‚РёРЅРё РєРѕСЂР°Р±Р»СЏ
                         found.Image = new Bitmap(path + $"/{data.Value.shipPart}.png");
 
-                        //Якщо корабель повернутий — повертаємо картинку
+                        //РЇРєС‰Рѕ РєРѕСЂР°Р±РµР»СЊ РїРѕРІРµСЂРЅСѓС‚РёР№ вЂ” РїРѕРІРµСЂС‚Р°С”РјРѕ РєР°СЂС‚РёРЅРєСѓ
                         if (data.Value.rotate)
                             found.Image.RotateFlip(RotateFlipType.Rotate270FlipNone);
                     }
@@ -441,7 +441,7 @@ namespace Kursach
 
         private void hideBorders(string shipNum)
         {
-            //Прибираємо обрамлення для конкретного корабля по номеру
+            //РџСЂРёР±РёСЂР°С”РјРѕ РѕР±СЂР°РјР»РµРЅРЅСЏ РґР»СЏ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ РєРѕСЂР°Р±Р»СЏ РїРѕ РЅРѕРјРµСЂСѓ
             foreach (var data in cells)
             {
                 if (data.Value.status == $"n_{shipNum}")
@@ -463,7 +463,7 @@ namespace Kursach
 
         private void returnDefaultPosition()
         {
-            //Повертаємо корабель на початкову позицію, якщо він видимий і рухається
+            //РџРѕРІРµСЂС‚Р°С”РјРѕ РєРѕСЂР°Р±РµР»СЊ РЅР° РїРѕС‡Р°С‚РєРѕРІСѓ РїРѕР·РёС†С–СЋ, СЏРєС‰Рѕ РІС–РЅ РІРёРґРёРјРёР№ С– СЂСѓС…Р°С”С‚СЊСЃСЏ
             if (movingShip != null && movingShip.Visible == true)
             {
                 foreach (var data in defaultShipPoints)
@@ -472,7 +472,7 @@ namespace Kursach
                     {
                         movingShip.Location = data.Value;
 
-                        //Якщо корабель повернутий, міняємо розмір і зображення
+                        //РЇРєС‰Рѕ РєРѕСЂР°Р±РµР»СЊ РїРѕРІРµСЂРЅСѓС‚РёР№, РјС–РЅСЏС”РјРѕ СЂРѕР·РјС–СЂ С– Р·РѕР±СЂР°Р¶РµРЅРЅСЏ
                         if (movingShip.Size.Width < movingShip.Size.Height || movingShip.Size.Width == movingShip.Size.Height)
                         {
                             movingShip.Size = new Size(movingShip.Size.Height, movingShip.Size.Width);
@@ -485,7 +485,7 @@ namespace Kursach
             }
         }
 
-        //Обробники руху корабля мишею
+        //РћР±СЂРѕР±РЅРёРєРё СЂСѓС…Сѓ РєРѕСЂР°Р±Р»СЏ РјРёС€РµСЋ
         private void ship_MouseMove(object sender, MouseEventArgs e)
         {
             shipMove();
@@ -494,31 +494,31 @@ namespace Kursach
         {
             if (sender is PictureBox ship)
             {
-                dragging = true; //Початок перетягування
+                dragging = true; //РџРѕС‡Р°С‚РѕРє РїРµСЂРµС‚СЏРіСѓРІР°РЅРЅСЏ
                 dragCursorPoint = Cursor.Position;
                 dragPictureBoxPoint = ship.Location;
                 movingShip = ship;
                 isRotate = ship.Size.Width < ship.Size.Height ? true : false;
                 movingShipNum = ship.Name.Replace("ship", "");
                 ship.BringToFront();
-                showBorders(); //Показати обрамлення навколо корабля
+                showBorders(); //РџРѕРєР°Р·Р°С‚Рё РѕР±СЂР°РјР»РµРЅРЅСЏ РЅР°РІРєРѕР»Рѕ РєРѕСЂР°Р±Р»СЏ
             }
         }
         private void ship_MouseUp(object sender, MouseEventArgs e)
         {
-            returnDefaultPosition(); //Повернути корабель на місце, якщо треба
-            hideBorders();           //Приховати обрамлення
-            playButton.Enabled = AllShipInField(); //Активувати кнопку гри, якщо всі кораблі на полі
-            dragging = false;        //Завершення перетягування
+            returnDefaultPosition(); //РџРѕРІРµСЂРЅСѓС‚Рё РєРѕСЂР°Р±РµР»СЊ РЅР° РјС–СЃС†Рµ, СЏРєС‰Рѕ С‚СЂРµР±Р°
+            hideBorders();           //РџСЂРёС…РѕРІР°С‚Рё РѕР±СЂР°РјР»РµРЅРЅСЏ
+            playButton.Enabled = AllShipInField(); //РђРєС‚РёРІСѓРІР°С‚Рё РєРЅРѕРїРєСѓ РіСЂРё, СЏРєС‰Рѕ РІСЃС– РєРѕСЂР°Р±Р»С– РЅР° РїРѕР»С–
+            dragging = false;        //Р—Р°РІРµСЂС€РµРЅРЅСЏ РїРµСЂРµС‚СЏРіСѓРІР°РЅРЅСЏ
         }
 
-        //Таймер для визначення довгого натискання
+        //РўР°Р№РјРµСЂ РґР»СЏ РІРёР·РЅР°С‡РµРЅРЅСЏ РґРѕРІРіРѕРіРѕ РЅР°С‚РёСЃРєР°РЅРЅСЏ
         private System.Windows.Forms.Timer holdTimer;
         private bool isLongPress = false;
 
         private void field_MouseDown(object sender, MouseEventArgs e)
         {
-            //Запускаємо таймер для довгого натискання на клітинці поля
+            //Р—Р°РїСѓСЃРєР°С”РјРѕ С‚Р°Р№РјРµСЂ РґР»СЏ РґРѕРІРіРѕРіРѕ РЅР°С‚РёСЃРєР°РЅРЅСЏ РЅР° РєР»С–С‚РёРЅС†С– РїРѕР»СЏ
             isLongPress = false;
             holdTimer = new System.Windows.Forms.Timer();
             holdTimer.Interval = 150;
@@ -534,7 +534,7 @@ namespace Kursach
                     {
                         string status = cells[key].status;
 
-                        //Якщо в клітинці є корабель, починаємо перетягування
+                        //РЇРєС‰Рѕ РІ РєР»С–С‚РёРЅС†С– С” РєРѕСЂР°Р±РµР»СЊ, РїРѕС‡РёРЅР°С”РјРѕ РїРµСЂРµС‚СЏРіСѓРІР°РЅРЅСЏ
                         if (!string.IsNullOrEmpty(status) && int.TryParse(status[0].ToString(), out int size))
                         {
                             isRotate = cells[key].rotate;
@@ -559,7 +559,7 @@ namespace Kursach
 
         private void field_MouseMove(object sender, MouseEventArgs e)
         {
-            shipMove(); //Рух корабля під час перетягування мишкою
+            shipMove(); //Р СѓС… РєРѕСЂР°Р±Р»СЏ РїС–Рґ С‡Р°СЃ РїРµСЂРµС‚СЏРіСѓРІР°РЅРЅСЏ РјРёС€РєРѕСЋ
         }
 
         private void field_MouseUp(object sender, MouseEventArgs e)
@@ -568,7 +568,7 @@ namespace Kursach
 
             if (!isLongPress)
             {
-                //Якщо коротке натискання — обертання корабля
+                //РЇРєС‰Рѕ РєРѕСЂРѕС‚РєРµ РЅР°С‚РёСЃРєР°РЅРЅСЏ вЂ” РѕР±РµСЂС‚Р°РЅРЅСЏ РєРѕСЂР°Р±Р»СЏ
                 isLongPress = true;
                 if (sender is PictureBox pb)
                 {
@@ -579,7 +579,7 @@ namespace Kursach
             }
             else
             {
-                //Завершення перетягування — повернення корабля і оновлення інтерфейсу
+                //Р—Р°РІРµСЂС€РµРЅРЅСЏ РїРµСЂРµС‚СЏРіСѓРІР°РЅРЅСЏ вЂ” РїРѕРІРµСЂРЅРµРЅРЅСЏ РєРѕСЂР°Р±Р»СЏ С– РѕРЅРѕРІР»РµРЅРЅСЏ С–РЅС‚РµСЂС„РµР№СЃСѓ
                 returnDefaultPosition();
                 hideBorders();
                 playButton.Enabled = AllShipInField();
@@ -589,7 +589,7 @@ namespace Kursach
 
         private Point LastShipPoint(string key, string shipPart, bool rotate)
         {
-            //Обчислюємо останню точку корабля на полі в залежності від повороту
+            //РћР±С‡РёСЃР»СЋС”РјРѕ РѕСЃС‚Р°РЅРЅСЋ С‚РѕС‡РєСѓ РєРѕСЂР°Р±Р»СЏ РЅР° РїРѕР»С– РІ Р·Р°Р»РµР¶РЅРѕСЃС‚С– РІС–Рґ РїРѕРІРѕСЂРѕС‚Сѓ
             string[] parts = shipPart.Split("_");
             int size = int.Parse(parts[0]);
             int part = int.Parse(parts[1]) - 1;
@@ -606,24 +606,24 @@ namespace Kursach
             return new Point(col, row);
         }
 
-        //Метод для обертання корабля на полі
+        //РњРµС‚РѕРґ РґР»СЏ РѕР±РµСЂС‚Р°РЅРЅСЏ РєРѕСЂР°Р±Р»СЏ РЅР° РїРѕР»С–
         private void RotateShip(string key)
         {
-            //Отримуємо поточний стан обертання і розмір корабля
+            //РћС‚СЂРёРјСѓС”РјРѕ РїРѕС‚РѕС‡РЅРёР№ СЃС‚Р°РЅ РѕР±РµСЂС‚Р°РЅРЅСЏ С– СЂРѕР·РјС–СЂ РєРѕСЂР°Р±Р»СЏ
             bool rotate = cells[key].rotate;
             string status = cells[key].status;
             movingShipNum = status;
             if (!int.TryParse(status.Substring(0, 1), out int size))
                 return;
 
-            //Розбираємо позицію та індекс частини корабля
+            //Р РѕР·Р±РёСЂР°С”РјРѕ РїРѕР·РёС†С–СЋ С‚Р° С–РЅРґРµРєСЃ С‡Р°СЃС‚РёРЅРё РєРѕСЂР°Р±Р»СЏ
             string[] inxs = key.Split('_');
             int row = int.Parse(inxs[0]);
             int col = int.Parse(inxs[1]);
             string[] info = cells[key].shipPart.Split('_');
             int partIndex = int.Parse(info[1]) - 1;
 
-            //Очищуємо стару позицію корабля на полі
+            //РћС‡РёС‰СѓС”РјРѕ СЃС‚Р°СЂСѓ РїРѕР·РёС†С–СЋ РєРѕСЂР°Р±Р»СЏ РЅР° РїРѕР»С–
             if (!rotate)
             {
                 col -= partIndex;
@@ -638,11 +638,11 @@ namespace Kursach
             string start = $"{row}_{col}";
             int Y = cells[start].start.Y - ((size - 1) * CELL_SIZE);
 
-            //Перевіряємо, чи можна розмістити корабель у новій орієнтації
+            //РџРµСЂРµРІС–СЂСЏС”РјРѕ, С‡Рё РјРѕР¶РЅР° СЂРѕР·РјС–СЃС‚РёС‚Рё РєРѕСЂР°Р±РµР»СЊ Сѓ РЅРѕРІС–Р№ РѕСЂС–С”РЅС‚Р°С†С–С—
             bool canPlace = !rotate ? CanPlaceShip(row - size + 1, col, size, !rotate) : CanPlaceShip(row, col, size, !rotate);
             if (!canPlace)
             {
-                //Якщо не можна — відновлюємо старий стан і оновлюємо вигляд
+                //РЇРєС‰Рѕ РЅРµ РјРѕР¶РЅР° вЂ” РІС–РґРЅРѕРІР»СЋС”РјРѕ СЃС‚Р°СЂРёР№ СЃС‚Р°РЅ С– РѕРЅРѕРІР»СЋС”РјРѕ РІРёРіР»СЏРґ
                 if (ships.TryGetValue(status, out PictureBox found))
                 {
                     found.Size = new Size(found.Height, found.Width);
@@ -664,7 +664,7 @@ namespace Kursach
                 return;
             }
 
-            //Розміщуємо корабель у новій орієнтації — оновлюємо статус і картинки клітинок
+            //Р РѕР·РјС–С‰СѓС”РјРѕ РєРѕСЂР°Р±РµР»СЊ Сѓ РЅРѕРІС–Р№ РѕСЂС–С”РЅС‚Р°С†С–С— вЂ” РѕРЅРѕРІР»СЋС”РјРѕ СЃС‚Р°С‚СѓСЃ С– РєР°СЂС‚РёРЅРєРё РєР»С–С‚РёРЅРѕРє
             if (!rotate)
             {
                 for (int i = 0; i < size; i++)
@@ -699,14 +699,14 @@ namespace Kursach
                 }
             }
 
-            //Оновлюємо зону навколо корабля
+            //РћРЅРѕРІР»СЋС”РјРѕ Р·РѕРЅСѓ РЅР°РІРєРѕР»Рѕ РєРѕСЂР°Р±Р»СЏ
             int startRow = !rotate ? Math.Max(0, row - size) : Math.Max(0, row - 1);
             int endRow = Math.Min(9, row + 1);
             int startCol = Math.Max(0, col - 1);
             int endCol = !rotate ? Math.Min(9, col + 1) : Math.Min(9, col + size);
             nearDrawing(startRow, endRow, startCol, endCol);
 
-            //Оновлюємо вигляд самого корабля після обертання
+            //РћРЅРѕРІР»СЋС”РјРѕ РІРёРіР»СЏРґ СЃР°РјРѕРіРѕ РєРѕСЂР°Р±Р»СЏ РїС–СЃР»СЏ РѕР±РµСЂС‚Р°РЅРЅСЏ
             if (ships.TryGetValue(key, out PictureBox found1))
             {
                 found1.Size = new Size(found1.Height, found1.Width);
@@ -725,7 +725,7 @@ namespace Kursach
             hideBorders();
         }
 
-        //Обробник кнопки "Перемішати" — випадково розставляє кораблі на полі
+        //РћР±СЂРѕР±РЅРёРє РєРЅРѕРїРєРё "РџРµСЂРµРјС–С€Р°С‚Рё" вЂ” РІРёРїР°РґРєРѕРІРѕ СЂРѕР·СЃС‚Р°РІР»СЏС” РєРѕСЂР°Р±Р»С– РЅР° РїРѕР»С–
         private void shuffleButton_Click(object sender, EventArgs e)
         {
             RandShipsPlace();
@@ -733,14 +733,14 @@ namespace Kursach
 
         private void RandShipsPlace()
         {
-            clearCells();               //Очищаємо поле
-            playButton.Enabled = true;  //Активуємо кнопку "Грати"
+            clearCells();               //РћС‡РёС‰Р°С”РјРѕ РїРѕР»Рµ
+            playButton.Enabled = true;  //РђРєС‚РёРІСѓС”РјРѕ РєРЅРѕРїРєСѓ "Р“СЂР°С‚Рё"
             Random rand = new Random();
 
             List<string> shipsArr = new List<string>();
             List<string> dUseCells = new List<string>();
 
-            //Заповнюємо список всіх клітинок (для перевірки вільних)
+            //Р—Р°РїРѕРІРЅСЋС”РјРѕ СЃРїРёСЃРѕРє РІСЃС–С… РєР»С–С‚РёРЅРѕРє (РґР»СЏ РїРµСЂРµРІС–СЂРєРё РІС–Р»СЊРЅРёС…)
             for (int i = 0; i < 10; i++)
             {
                 for (int b = 0; b < 10; b++)
@@ -755,7 +755,7 @@ namespace Kursach
                 }
             }
 
-            //Формуємо список кораблів (4 палубні до 1 палубних)
+            //Р¤РѕСЂРјСѓС”РјРѕ СЃРїРёСЃРѕРє РєРѕСЂР°Р±Р»С–РІ (4 РїР°Р»СѓР±РЅС– РґРѕ 1 РїР°Р»СѓР±РЅРёС…)
             int j = 0;
             for (int i = 4; i > 0; i--)
             {
@@ -764,7 +764,7 @@ namespace Kursach
                     shipsArr.Add($"{i}_{k}");
             }
 
-            //Розставляємо кожен корабель випадково, перевіряючи вільне місце
+            //Р РѕР·СЃС‚Р°РІР»СЏС”РјРѕ РєРѕР¶РµРЅ РєРѕСЂР°Р±РµР»СЊ РІРёРїР°РґРєРѕРІРѕ, РїРµСЂРµРІС–СЂСЏСЋС‡Рё РІС–Р»СЊРЅРµ РјС–СЃС†Рµ
             foreach (string sh in shipsArr)
             {
                 bool rotate = rand.Next(0, 2) == 0;
@@ -796,7 +796,7 @@ namespace Kursach
                     keyIsOk = allFree;
                 }
 
-                //Записуємо позиції корабля в клітинки і ставимо картинки
+                //Р—Р°РїРёСЃСѓС”РјРѕ РїРѕР·РёС†С–С— РєРѕСЂР°Р±Р»СЏ РІ РєР»С–С‚РёРЅРєРё С– СЃС‚Р°РІРёРјРѕ РєР°СЂС‚РёРЅРєРё
                 for (int i = 0; i < size; i++)
                 {
                     string newKey = rotate ? $"{row - i}_{col}" : $"{row}_{col + i}";
@@ -814,7 +814,7 @@ namespace Kursach
                     }
                 }
 
-                //Оновлюємо зону навколо корабля як "near"
+                //РћРЅРѕРІР»СЋС”РјРѕ Р·РѕРЅСѓ РЅР°РІРєРѕР»Рѕ РєРѕСЂР°Р±Р»СЏ СЏРє "near"
                 int startRow = rotate ? row - size : row - 1;
                 int endRow = row + 1;
                 int startCol = col - 1;
@@ -838,7 +838,7 @@ namespace Kursach
                     }
                 }
 
-                //Оновлюємо вигляд самого корабля (приховуємо PictureBox)
+                //РћРЅРѕРІР»СЋС”РјРѕ РІРёРіР»СЏРґ СЃР°РјРѕРіРѕ РєРѕСЂР°Р±Р»СЏ (РїСЂРёС…РѕРІСѓС”РјРѕ PictureBox)
                 string start = $"{row}_{col}";
                 if (ships.TryGetValue(sh, out PictureBox found1))
                 {
@@ -859,7 +859,7 @@ namespace Kursach
             }
         }
 
-        //Очищає всі клітинки поля: скидає статус, частину корабля і орієнтацію, ставить пусту картинку
+        //РћС‡РёС‰Р°С” РІСЃС– РєР»С–С‚РёРЅРєРё РїРѕР»СЏ: СЃРєРёРґР°С” СЃС‚Р°С‚СѓСЃ, С‡Р°СЃС‚РёРЅСѓ РєРѕСЂР°Р±Р»СЏ С– РѕСЂС–С”РЅС‚Р°С†С–СЋ, СЃС‚Р°РІРёС‚СЊ РїСѓСЃС‚Сѓ РєР°СЂС‚РёРЅРєСѓ
         private void clearCells()
         {
             foreach (var cell in cells)
@@ -875,11 +875,11 @@ namespace Kursach
             }
         }
 
-        //Обробник кнопки "Очистити" — скидає поле, активує/деактивує кнопки, повертає кораблі на стартові позиції
+        //РћР±СЂРѕР±РЅРёРє РєРЅРѕРїРєРё "РћС‡РёСЃС‚РёС‚Рё" вЂ” СЃРєРёРґР°С” РїРѕР»Рµ, Р°РєС‚РёРІСѓС”/РґРµР°РєС‚РёРІСѓС” РєРЅРѕРїРєРё, РїРѕРІРµСЂС‚Р°С” РєРѕСЂР°Р±Р»С– РЅР° СЃС‚Р°СЂС‚РѕРІС– РїРѕР·РёС†С–С—
         private void clearButton_Click(object sender, EventArgs e)
         {
-            playButton.Enabled = false;  //Деактивує кнопку "Грати"
-            clearCells();                //Очищаємо поле
+            playButton.Enabled = false;  //Р”РµР°РєС‚РёРІСѓС” РєРЅРѕРїРєСѓ "Р“СЂР°С‚Рё"
+            clearCells();                //РћС‡РёС‰Р°С”РјРѕ РїРѕР»Рµ
             for (int i = 0; i < 10; i++)
             {
                 for (int b = 0; b < 10; b++)
@@ -887,52 +887,52 @@ namespace Kursach
                     string sh = $"{i}_{b}";
                     if (ships.TryGetValue(sh, out PictureBox found))
                     {
-                        found.Visible = true;                     //Показуємо корабель
-                        found.Size = new Size(i * CELL_SIZE, CELL_SIZE);       //Встановлюємо розмір за кількістю палуб
-                        found.Image = new Bitmap(path + $"/{i}.png"); //Встановлюємо картинку корабля
-                        found.Location = defaultShipPoints[sh]; //Повертаємо на стартову позицію
+                        found.Visible = true;                     //РџРѕРєР°Р·СѓС”РјРѕ РєРѕСЂР°Р±РµР»СЊ
+                        found.Size = new Size(i * CELL_SIZE, CELL_SIZE);       //Р’СЃС‚Р°РЅРѕРІР»СЋС”РјРѕ СЂРѕР·РјС–СЂ Р·Р° РєС–Р»СЊРєС–СЃС‚СЋ РїР°Р»СѓР±
+                        found.Image = new Bitmap(path + $"/{i}.png"); //Р’СЃС‚Р°РЅРѕРІР»СЋС”РјРѕ РєР°СЂС‚РёРЅРєСѓ РєРѕСЂР°Р±Р»СЏ
+                        found.Location = defaultShipPoints[sh]; //РџРѕРІРµСЂС‚Р°С”РјРѕ РЅР° СЃС‚Р°СЂС‚РѕРІСѓ РїРѕР·РёС†С–СЋ
                     }
                 }
             }
         }
 
-        //Зміна фону кнопки "Перемішати" при наведенні курсору — повертаємо білий колір при виході курсору
+        //Р—РјС–РЅР° С„РѕРЅСѓ РєРЅРѕРїРєРё "РџРµСЂРµРјС–С€Р°С‚Рё" РїСЂРё РЅР°РІРµРґРµРЅРЅС– РєСѓСЂСЃРѕСЂСѓ вЂ” РїРѕРІРµСЂС‚Р°С”РјРѕ Р±С–Р»РёР№ РєРѕР»С–СЂ РїСЂРё РІРёС…РѕРґС– РєСѓСЂСЃРѕСЂСѓ
         private void shuffleButton_MouseLeave(object sender, EventArgs e)
         {
             shuffleButton.BackColor = Color.White;
         }
 
-        //Зміна фону кнопки "Перемішати" при наведенні курсору — підсвічування
+        //Р—РјС–РЅР° С„РѕРЅСѓ РєРЅРѕРїРєРё "РџРµСЂРµРјС–С€Р°С‚Рё" РїСЂРё РЅР°РІРµРґРµРЅРЅС– РєСѓСЂСЃРѕСЂСѓ вЂ” РїС–РґСЃРІС–С‡СѓРІР°РЅРЅСЏ
         private void shuffleButton_MouseEnter(object sender, EventArgs e)
         {
             shuffleButton.BackColor = Color.FromArgb(207, 207, 244);
         }
 
-        //Підсвічування кнопки "Очистити" при наведенні
+        //РџС–РґСЃРІС–С‡СѓРІР°РЅРЅСЏ РєРЅРѕРїРєРё "РћС‡РёСЃС‚РёС‚Рё" РїСЂРё РЅР°РІРµРґРµРЅРЅС–
         private void clearButton_MouseEnter(object sender, EventArgs e)
         {
             clearButton.BackColor = Color.FromArgb(207, 207, 244);
         }
 
-        //Повернення кольору кнопки "Очистити" при виході курсору
+        //РџРѕРІРµСЂРЅРµРЅРЅСЏ РєРѕР»СЊРѕСЂСѓ РєРЅРѕРїРєРё "РћС‡РёСЃС‚РёС‚Рё" РїСЂРё РІРёС…РѕРґС– РєСѓСЂСЃРѕСЂСѓ
         private void clearButton_MouseLeave(object sender, EventArgs e)
         {
             clearButton.BackColor = Color.White;
         }
 
-        //Підсвічування кнопки "Грати" при наведенні
+        //РџС–РґСЃРІС–С‡СѓРІР°РЅРЅСЏ РєРЅРѕРїРєРё "Р“СЂР°С‚Рё" РїСЂРё РЅР°РІРµРґРµРЅРЅС–
         private void playButton_MouseEnter(object sender, EventArgs e)
         {
             playButton.BackColor = Color.FromArgb(207, 207, 244);
         }
 
-        //Повернення кольору кнопки "Грати" при виході курсору
+        //РџРѕРІРµСЂРЅРµРЅРЅСЏ РєРѕР»СЊРѕСЂСѓ РєРЅРѕРїРєРё "Р“СЂР°С‚Рё" РїСЂРё РІРёС…РѕРґС– РєСѓСЂСЃРѕСЂСѓ
         private void playButton_MouseLeave(object sender, EventArgs e)
         {
             playButton.BackColor = Color.White;
         }
 
-        //Перевіряє, чи всі 10 кораблів розміщені на полі (невидимі — значить на полі)
+        //РџРµСЂРµРІС–СЂСЏС”, С‡Рё РІСЃС– 10 РєРѕСЂР°Р±Р»С–РІ СЂРѕР·РјС–С‰РµРЅС– РЅР° РїРѕР»С– (РЅРµРІРёРґРёРјС– вЂ” Р·РЅР°С‡РёС‚СЊ РЅР° РїРѕР»С–)
         private bool AllShipInField()
         {
             int count = 0;
@@ -944,7 +944,7 @@ namespace Kursach
             return count == 10;
         }
 
-        //Обробник кнопки "Грати" — ховає поточну форму, відкриває форму клієнта гри
+        //РћР±СЂРѕР±РЅРёРє РєРЅРѕРїРєРё "Р“СЂР°С‚Рё" вЂ” С…РѕРІР°С” РїРѕС‚РѕС‡РЅСѓ С„РѕСЂРјСѓ, РІС–РґРєСЂРёРІР°С” С„РѕСЂРјСѓ РєР»С–С”РЅС‚Р° РіСЂРё
         private void playButton_Click(object sender, EventArgs e)
         {
             this.Visible = false;
@@ -954,7 +954,7 @@ namespace Kursach
             form.ShowDialog();
         }
 
-        //Обробник закриття форми — гарантує повне завершення програми, якщо не планувалося закриття інакше
+        //РћР±СЂРѕР±РЅРёРє Р·Р°РєСЂРёС‚С‚СЏ С„РѕСЂРјРё вЂ” РіР°СЂР°РЅС‚СѓС” РїРѕРІРЅРµ Р·Р°РІРµСЂС€РµРЅРЅСЏ РїСЂРѕРіСЂР°РјРё, СЏРєС‰Рѕ РЅРµ РїР»Р°РЅСѓРІР°Р»РѕСЃСЏ Р·Р°РєСЂРёС‚С‚СЏ С–РЅР°РєС€Рµ
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (!programClose)
